@@ -7,7 +7,7 @@
 ## How to use
 ### Generating pattern files.
 
-    python Pattern_Generate.py -r 'recognition.json' -af 'audio_files_path' -pf 'export_pattern_files_path'
+    python Pattern_Generate.py -r 'recognition.json' -af 'audio_files_path' -pf 'export_pattern_files_path'
 
 If you set 'pattern_Files_Path' of hyper parameter, PF arg is optional.
 
