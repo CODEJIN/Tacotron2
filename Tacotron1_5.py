@@ -1,7 +1,4 @@
-#선행완료 한 곳: https://github.com/Rayhane-mamah/Tacotron-2/tree/master/tacotron
-
-#Basic input pattern shape: (Batch, Letter_Index);
-#Embedded input pattern shape: (Batch, Letter_Index, distributed_Pattern)
+#referring to: https://github.com/Rayhane-mamah/Tacotron-2/tree/master/tacotron
 
 import numpy as np;
 import tensorflow as tf;
@@ -104,7 +101,9 @@ class Tacotron_Model:
             mel_Loss2 = tf.reduce_mean(tf.pow(placeholder_Dict["Mel_Spectrogram"] - mel_Spectrogram_Activation, 2));
             
             #Stop token loss
-            stop_Target = tf.concat([tf.zeros_like(stop_Token)[:,:-1], tf.ones_like(stop_Token)[:,-1:]], axis=1);
+            tiled_Range = tf.cast(tf.tile(tf.expand_dims(tf.range(tf.shape(stop_Token)[1]), axis=0), multiples=[batch_Size, 1]), tf.float32);            
+            tiled_Spectrogram_Length = tf.cast(tf.tile(tf.expand_dims(placeholder_Dict["Mel_Spectrogram_Length"] - 1, axis=1), multiples=[1, tf.shape(stop_Token)[1]]), tf.float32)
+            stop_Target = tf.clip_by_value(tf.sign(tiled_Range - tiled_Spectrogram_Length), clip_value_min = 0, clip_value_max = 1)
             stop_Token_Loss = tf.reduce_mean(tf.pow(stop_Target - stop_Token, 2));
             
             #Spectrogram loss. It is only for Tacotron1 method.

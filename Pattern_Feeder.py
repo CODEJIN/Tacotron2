@@ -48,13 +48,14 @@ class Pattern_Feeder:
             self.placeholder_Dict["Token_Length"] = tf.placeholder(tf.int32, shape=(None,), name="token_Length_Placeholder");    #[batch_Size];
             self.placeholder_Dict["Spectrogram"] = tf.placeholder(tf.float32, shape=(None, None, pattern_Prameters.spectrogram_Dimension), name="spectrogram_Placeholder");    #[batch_Size, spectrogram_Length, spectogram_Dimension];
             self.placeholder_Dict["Mel_Spectrogram"] = tf.placeholder(tf.float32, shape=(None, None, pattern_Prameters.mel_Spectrogram_Dimension), name="mel_Spectrogram_Placeholder");    #Shape: [batch_Size, spectrogram_Length, mel_Spectogram_Dimension];
+            self.placeholder_Dict["Mel_Spectrogram_Length"] = tf.placeholder(tf.int32, shape=(None,), name="mel_Spectrogram_Length_Placeholder");    #[batch_Size];
 
     def Pattern_Generate(self, is_Random = False):
         pattern_Index_List = list(range(len(self.file_Name_List)));
         if not is_Random:
             pattern_Index_List = [x for _, x in sorted(zip(self.token_Length_List, pattern_Index_List))]    #Sequence by length
 
-        while True:            
+        while True:
             if is_Random:
                 shuffle(pattern_Index_List);    #Randomized order
 
@@ -91,19 +92,22 @@ class Pattern_Feeder:
         token_Length_Array = np.zeros((pattern_Count)).astype("int32");
         spectrogram_Pattern_Array = np.zeros((pattern_Count, max_Spectrogram_Pattern_Length, pattern_Prameters.spectrogram_Dimension)).astype("float32");
         mel_Spectrogram_Pattern_Array = np.zeros((pattern_Count, max_Spectrogram_Pattern_Length, pattern_Prameters.mel_Spectrogram_Dimension)).astype("float32");
+        mel_Spectrogram_Length_Array = np.zeros((pattern_Count)).astype("int32");
 
         for index, (token_Pattern, spectrogram_Pattern, mel_Spectrogram_Pattern) in enumerate(zip(token_Pattern_List, spectrogram_Pattern_List, mel_Spectrogram_Pattern_List)):
             token_Pattern_Array[index, :len(token_Pattern)] = token_Pattern;
             token_Length_Array[index] = len(token_Pattern);
             spectrogram_Pattern_Array[index, :spectrogram_Pattern.shape[0], :] = spectrogram_Pattern;
             mel_Spectrogram_Pattern_Array[index, :mel_Spectrogram_Pattern.shape[0], :] = mel_Spectrogram_Pattern;
+            mel_Spectrogram_Length_Array[index] = mel_Spectrogram_Pattern.shape[0];
 
         feed_Dict = {
             self.placeholder_Dict["Is_Training"]: True,
             self.placeholder_Dict["Token"]: token_Pattern_Array,
             self.placeholder_Dict["Token_Length"]: token_Length_Array,
             self.placeholder_Dict["Spectrogram"]: spectrogram_Pattern_Array,
-            self.placeholder_Dict["Mel_Spectrogram"]: mel_Spectrogram_Pattern_Array
+            self.placeholder_Dict["Mel_Spectrogram"]: mel_Spectrogram_Pattern_Array,
+            self.placeholder_Dict["Mel_Spectrogram_Length"]: mel_Spectrogram_Length_Array
             }
         self.pattern_Queue.append(feed_Dict);
 
@@ -136,13 +140,15 @@ class Pattern_Feeder:
         max_Iterations = int(np.ceil(pattern_Prameters.max_Spectrogram_Length / decoder_Prameters.output_Size_per_Step));
         dummy_Spectrogram_Pattern_Array = np.zeros((batch_Size, max_Iterations, pattern_Prameters.spectrogram_Dimension)).astype("float32");
         dummy_Mel_Spectrogram_Pattern_Array = np.zeros((batch_Size, max_Iterations, pattern_Prameters.mel_Spectrogram_Dimension)).astype("float32");
+        dummy_Mel_Spectrogram_Length_Array = np.zeros((batch_Size)).astype("int32");
 
         feed_Dict = {
             self.placeholder_Dict["Is_Training"]: False,
             self.placeholder_Dict["Token"]: token_Pattern_Array,
             self.placeholder_Dict["Token_Length"]: token_Length_Array,
             self.placeholder_Dict["Spectrogram"]: dummy_Spectrogram_Pattern_Array,
-            self.placeholder_Dict["Mel_Spectrogram"]: dummy_Mel_Spectrogram_Pattern_Array
+            self.placeholder_Dict["Mel_Spectrogram"]: dummy_Mel_Spectrogram_Pattern_Array,
+            self.placeholder_Dict["Mel_Spectrogram_Length"]: dummy_Mel_Spectrogram_Length_Array
             }
         
         return feed_Dict;
@@ -154,3 +160,6 @@ if __name__ == "__main__":
     while True:
         time.sleep(1);
         print(len(new_Pattern_Feeder.pattern_Queue));
+        if len(new_Pattern_Feeder.pattern_Queue) > 0:
+            print(new_Pattern_Feeder.Get_Pattern())
+            break;
