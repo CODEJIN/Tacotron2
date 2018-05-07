@@ -127,9 +127,9 @@ class Tacotron_Model:
                 step = tf.cast(global_Step + 1, dtype=tf.float32);
                 warmup_Steps = 4000.0;
                 learning_Rate = training_Loss_Parameters.initial_Learning_Rate * warmup_Steps ** 0.5 * tf.minimum(step * warmup_Steps**-1.5, step**-0.5)
-            elif self.learning_Rate_Decay_Type.lower() == "exponential":
+            elif training_Loss_Parameters.decay_Type.lower() == "exponential":
                 learning_Rate = training_Loss_Parameters.initial_Learning_Rate * tf.train.exponential_decay(1., global_Step, 3000, 0.95);
-            elif self.learning_Rate_Decay_Type.lower() == "static":
+            elif training_Loss_Parameters.decay_Type.lower() == "static":
                 learning_Rate = tf.convert_to_tensor(training_Loss_Parameters.initial_Learning_Rate, dtype=tf.float32);
             else:
                 raise Exception("Unsupported learning rate decay type");
