@@ -269,8 +269,6 @@ class LinearProjectionWrapper(RNNCell):
         return self._cell.zero_state(batch_size, dtype)
 
 
-#See L87 of https://github.com/Rayhane-mamah/Tacotron-2/blob/master/tacotron/models/tacotron.py. I need make the Tacotron decoder cell.
-#See L72 of https://github.com/Rayhane-mamah/Tacotron-2/blob/master/tacotron/models/Architecture_wrappers.py. I need make the Tacotron decoder cell.
 class Tacotron2_Helper(Helper):
     def __init__(self, is_Training, batch_Size, target_Pattern, output_Dimension, output_Size_per_Step, linear_Projection_Size, stop_Token_Size):
         '''
@@ -343,7 +341,44 @@ def _go_frames(batch_Size, output_Dimension):
   return tf.tile([[0.0]], [batch_Size, output_Dimension])
 
 
+#https://www.youtube.com/watch?v=nsrSrYtKkT8 from 23:00
+def WaveNet_Layer(input_Pattern, local_Condition, kernal_Size=3, dilation_Rate=1, scope='wave_Net'):
+    with tf.variable_scope(scope):
+        filter_Conv = tf.layers.conv1d(
+            input_Pattern,
+            filters=256,
+            kernel_size=kernal_Size,
+            dilation_rate=dilation_Rate,
+            activation=None,
+            padding='same')
+        gate_Conv = tf.layers.conv1d(
+            input_Pattern,
+            filters=256,
+            kernel_size=kernal_Size,
+            dilation_rate=dilation_Rate,
+            activation=None,
+            padding='same')
 
+        condition_Conv = tf.layers.conv1d(
+            input_Pattern,
+            filters=256,
+            kernel_size=1,
+            dilation_rate=dilation_Rate,
+            activation=None,
+            padding='same')
+
+        dilated_Filter = tf.nn.tanh(filter_Conv + condition_Conv);
+        dilated_Gate = tf.nn.sigmoid(gate_Conv + condition_Conv);
+
+        one_by_One_Conv = tf.layers.conv1d(
+            dilated_Filter + dilated_Gate,
+            filters=512,
+            kernel_size=1,
+            activation=None,
+            padding='same')
+        forward_Activation = input_Pattern + one_by_One_Conv;
+
+    return one_by_One_Conv, forward_Activation;
 
 #CBHG and Highway-net is for 1.5.
 #Wavenet will replace this modules.

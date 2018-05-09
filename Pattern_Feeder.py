@@ -44,6 +44,7 @@ class Pattern_Feeder:
         self.placeholder_Dict = {};
         with tf.variable_scope('placeHolders') as scope:
             self.placeholder_Dict["Is_Training"] = tf.placeholder(tf.bool, name="is_Training_Placeholder");    #boolean
+            self.placeholder_Dict["Signal"] = tf.placeholder(tf.float32, shape=(None, None), name="signal_Placeholder");    #[batch_Size, token_Length];
             self.placeholder_Dict["Token"] = tf.placeholder(tf.int32, shape=(None, None), name="token_Placeholder");    #[batch_Size, token_Length];
             self.placeholder_Dict["Token_Length"] = tf.placeholder(tf.int32, shape=(None,), name="token_Length_Placeholder");    #[batch_Size];
             self.placeholder_Dict["Spectrogram"] = tf.placeholder(tf.float32, shape=(None, None, pattern_Prameters.spectrogram_Dimension), name="spectrogram_Placeholder");    #[batch_Size, spectrogram_Length, spectogram_Dimension];
@@ -73,6 +74,7 @@ class Pattern_Feeder:
     def New_Pattern_Append(self, pattern_Index_List):
         pattern_Count = len(pattern_Index_List);
 
+        signal_Pattern_List = [];
         token_Pattern_List = [];
         spectrogram_Pattern_List = [];
         mel_Spectrogram_Pattern_List = [];
@@ -81,20 +83,25 @@ class Pattern_Feeder:
             file_Name = self.file_Name_List[index];
             with open(os.path.join(pattern_Prameters.pattern_Files_Path, file_Name).replace("\\", "/"), "rb") as f:
                 load_Dict = pickle.load(f);
+            signal_Pattern_List.append(load_Dict["Signal"]);
             token_Pattern_List.append(load_Dict["Token_Pattern"]);
             spectrogram_Pattern_List.append(np.transpose(load_Dict["Spectrogram_Pattern"]));
             mel_Spectrogram_Pattern_List.append(np.transpose(load_Dict["Mel_Spectrogram_Pattern"]));
 
+        signal_per_Frame = sound_Parameters.sample_Rate // int(1000 / sound_Parameters.frame_Shift);
+        max_Signal_Pattern_Length = int(np.ceil(max([x.shape[0] for x in signal_Pattern_List]) / signal_per_Frame) * signal_per_Frame);   #To compare to the output
         max_Token_Pattern_Length = max([len(x) for x in token_Pattern_List]);
         max_Spectrogram_Pattern_Length = int(np.ceil(max([x.shape[0] for x in spectrogram_Pattern_List]) / decoder_Prameters.output_Size_per_Step) * decoder_Prameters.output_Size_per_Step);   #To compare to the output
 
+        signal_Pattern_Array = np.zeros((pattern_Count, max_Signal_Pattern_Length)).astype("float32");
         token_Pattern_Array = np.zeros((pattern_Count, max_Token_Pattern_Length)).astype("int32");
         token_Length_Array = np.zeros((pattern_Count)).astype("int32");
         spectrogram_Pattern_Array = np.zeros((pattern_Count, max_Spectrogram_Pattern_Length, pattern_Prameters.spectrogram_Dimension)).astype("float32");
         mel_Spectrogram_Pattern_Array = np.zeros((pattern_Count, max_Spectrogram_Pattern_Length, pattern_Prameters.mel_Spectrogram_Dimension)).astype("float32");
         mel_Spectrogram_Length_Array = np.zeros((pattern_Count)).astype("int32");
 
-        for index, (token_Pattern, spectrogram_Pattern, mel_Spectrogram_Pattern) in enumerate(zip(token_Pattern_List, spectrogram_Pattern_List, mel_Spectrogram_Pattern_List)):
+        for index, (signal, token_Pattern, spectrogram_Pattern, mel_Spectrogram_Pattern) in enumerate(zip(signal_Pattern_List, token_Pattern_List, spectrogram_Pattern_List, mel_Spectrogram_Pattern_List)):
+            signal_Pattern_Array[index, :signal.shape[0]] = signal;
             token_Pattern_Array[index, :len(token_Pattern)] = token_Pattern;
             token_Length_Array[index] = len(token_Pattern);
             spectrogram_Pattern_Array[index, :spectrogram_Pattern.shape[0], :] = spectrogram_Pattern;
@@ -103,6 +110,7 @@ class Pattern_Feeder:
 
         feed_Dict = {
             self.placeholder_Dict["Is_Training"]: True,
+            self.placeholder_Dict["Signal"]: signal_Pattern_Array,
             self.placeholder_Dict["Token"]: token_Pattern_Array,
             self.placeholder_Dict["Token_Length"]: token_Length_Array,
             self.placeholder_Dict["Spectrogram"]: spectrogram_Pattern_Array,

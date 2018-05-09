@@ -127,9 +127,9 @@ class Tacotron_Model:
                 step = tf.cast(global_Step + 1, dtype=tf.float32);
                 warmup_Steps = 4000.0;
                 learning_Rate = training_Loss_Parameters.initial_Learning_Rate * warmup_Steps ** 0.5 * tf.minimum(step * warmup_Steps**-1.5, step**-0.5)
-            elif training_Loss_Parameters.decay_Type.lower() == "exponential":
+            elif self.learning_Rate_Decay_Type.lower() == "exponential":
                 learning_Rate = training_Loss_Parameters.initial_Learning_Rate * tf.train.exponential_decay(1., global_Step, 3000, 0.95);
-            elif training_Loss_Parameters.decay_Type.lower() == "static":
+            elif self.learning_Rate_Decay_Type.lower() == "static":
                 learning_Rate = tf.convert_to_tensor(training_Loss_Parameters.initial_Learning_Rate, dtype=tf.float32);
             else:
                 raise Exception("Unsupported learning rate decay type");
@@ -150,7 +150,7 @@ class Tacotron_Model:
             inverted_Signal = inv_spectrogram_tensorflow(
                 spectrogram=spectrogram_Activation, 
                 num_freq=pattern_Prameters.spectrogram_Dimension, 
-                frame_shift_ms=sound_Parameters.frame_Shfit, 
+                frame_shift_ms=sound_Parameters.frame_Shift, 
                 frame_length_ms=sound_Parameters.frame_Length, 
                 sample_rate=sound_Parameters.sample_Rate
                 )
@@ -193,7 +193,6 @@ class Tacotron_Model:
         #self.Test(test_String = test_String);
         try:
             while True:
-                self.pattern_Feeder.Get_Pattern()
                 start_Time = time.time();
                 global_Step, learning_Rate, training_Loss, _ = self.tf_Session.run(
                     fetches = self.training_Tensor_List,
@@ -276,6 +275,7 @@ class Tacotron_Model:
             file_Name += ".png";
         plt.savefig(file_Name, bbox_inches='tight');
         plt.close(fig);
+
 
 if __name__ == "__main__":
     argParser = argparse.ArgumentParser();

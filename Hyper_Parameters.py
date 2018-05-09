@@ -79,21 +79,21 @@ token_Index_Dict = {
 }
 
 sound_Parameters_Dict = {
-    "sample_Rate": 22050,    
+    "sample_Rate": 16000,
     "frame_Shift": 12.5,  #ms
     "frame_Length": 50,  #ms
     }
 
-pattern_Prameters_Dict = {    
+pattern_Parameters_Dict = {    
     "pattern_Files_Path": "D:/Tacotron2_Data/Talker1/Pattern",
     "mel_Spectrogram_Dimension": 80,
     "spectrogram_Dimension": 1024,
     "max_Spectrogram_Length": 1500,
-    "batch_Size": 32,
+    "batch_Size": 48,
     "max_Queue": 20,    
     }
 
-encoder_Prameters_Dict = {
+encoder_Parameters_Dict = {
     "number_of_Token": len(token_Index_Dict),
     "token_Embedding_Size": 512,
     "conv_Filter_Count": 512,
@@ -103,17 +103,17 @@ encoder_Prameters_Dict = {
     "zoneout_Rate": 0.1,
     }
 
-attention_Prameters_Dict = {
+attention_Parameters_Dict = {
     "attention_Size": 128,
     }
 
-decoder_Prameters_Dict = {
+decoder_Parameters_Dict = {
     "pre_Net_Layer_Size": 256,
     "pre_Net_Layer_Count": 2,
     "pre_Net_Dropout_Rate": 0.5,
     "lstm_Cell_Size": 1024,
     "zoneout_Rate": 0.1,    
-    "output_Size_per_Step": 3,    #Tacotron1: 3~5 by the code, Tacotron2: 1
+    "output_Size_per_Step": 4,    #Tacotron1: 3~5 by the code, Tacotron2: 1
     "post_Net_Conv_Filter_Count": 512,
     "post_Net_Conv_Kernal_Size": 5,
     "post_Net_Conv_Layer_Count": 5,
@@ -126,8 +126,8 @@ training_Loss_Parameters_Dict = {
     }
 
 sound_Parameters = tf.contrib.training.HParams(**sound_Parameters_Dict)
-pattern_Prameters = tf.contrib.training.HParams(**pattern_Prameters_Dict)
-encoder_Prameters = tf.contrib.training.HParams(**encoder_Prameters_Dict)
-attention_Prameters = tf.contrib.training.HParams(**attention_Prameters_Dict)
-decoder_Prameters = tf.contrib.training.HParams(**decoder_Prameters_Dict)
+pattern_Prameters = tf.contrib.training.HParams(**pattern_Parameters_Dict)
+encoder_Prameters = tf.contrib.training.HParams(**encoder_Parameters_Dict)
+attention_Prameters = tf.contrib.training.HParams(**attention_Parameters_Dict)
+decoder_Prameters = tf.contrib.training.HParams(**decoder_Parameters_Dict)
 training_Loss_Parameters = tf.contrib.training.HParams(**training_Loss_Parameters_Dict)
