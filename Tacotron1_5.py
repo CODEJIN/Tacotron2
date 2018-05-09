@@ -8,7 +8,7 @@ from ZoneoutLSTMCell import ZoneoutLSTMCell;
 from Customized_Modules import *;
 from Audio import *;
 from Pattern_Feeder import Pattern_Feeder;
-from Hyper_Parameters import sound_Parameters, pattern_Prameters, encoder_Prameters, attention_Prameters, decoder_Prameters, training_Loss_Parameters;
+from Hyper_Parameters import sound_Parameters, pattern_Parameters, encoder_Parameters, attention_Parameters, decoder_Parameters, training_Loss_Parameters;
 import time, os, argparse;
 import matplotlib
 matplotlib.use('agg')
@@ -36,7 +36,7 @@ class Tacotron_Model:
 
             token_Embedding = tf.get_variable(
                 name = "token_Embedding",
-                shape = (encoder_Prameters.number_of_Token, encoder_Prameters.token_Embedding_Size),
+                shape = (encoder_Parameters.number_of_Token, encoder_Parameters.token_Embedding_Size),
                 dtype = tf.float32,
                 initializer = tf.truncated_normal_initializer(stddev=0.5)
             )
@@ -52,7 +52,7 @@ class Tacotron_Model:
 
         with tf.variable_scope('attention') as scope:
             attention_Mechanism = BahdanauMonotonicAttention(
-                num_units = attention_Prameters.attention_Size,
+                num_units = attention_Parameters.attention_Size,
                 memory = encoder_Activation,
                 normalize=True,
                 name="bahdanau_Monotonic_Attention"
@@ -68,7 +68,7 @@ class Tacotron_Model:
                 )            
             post_Net_Activation = PostNet(
                 input_Pattern = linear_Projection_Activation,
-                conv_Filter_Count_and_Kernal_Size_List = [(decoder_Prameters.post_Net_Conv_Filter_Count, decoder_Prameters.post_Net_Conv_Kernal_Size)] * decoder_Prameters.post_Net_Conv_Layer_Count,
+                conv_Filter_Count_and_Kernal_Size_List = [(decoder_Parameters.post_Net_Conv_Filter_Count, decoder_Parameters.post_Net_Conv_Kernal_Size)] * decoder_Parameters.post_Net_Conv_Layer_Count,
                 is_Training = placeholder_Dict["Is_Training"],
                 scope = "post_Net"
                 )
@@ -91,7 +91,7 @@ class Tacotron_Model:
 
             spectrogram_Activation = tf.layers.dense(
                 post_CBHG_Activation, 
-                pattern_Prameters.spectrogram_Dimension, 
+                pattern_Parameters.spectrogram_Dimension, 
                 name = "spectrogram"
                 )
 
@@ -149,7 +149,7 @@ class Tacotron_Model:
         with tf.variable_scope('test_Inference') as scope:
             inverted_Signal = inv_spectrogram_tensorflow(
                 spectrogram=spectrogram_Activation, 
-                num_freq=pattern_Prameters.spectrogram_Dimension, 
+                num_freq=pattern_Parameters.spectrogram_Dimension, 
                 frame_shift_ms=sound_Parameters.frame_Shift, 
                 frame_length_ms=sound_Parameters.frame_Length, 
                 sample_rate=sound_Parameters.sample_Rate

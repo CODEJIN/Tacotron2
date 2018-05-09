@@ -7,14 +7,14 @@ import _pickle as pickle;
 from random import shuffle;
 from hanja import hangul;
 from Kor_Str_Management import String_to_Token_List;
-from Hyper_Parameters import sound_Parameters, pattern_Prameters, encoder_Prameters, attention_Prameters, decoder_Prameters, training_Loss_Parameters;
+from Hyper_Parameters import sound_Parameters, pattern_Parameters, encoder_Parameters, attention_Parameters, decoder_Parameters, training_Loss_Parameters;
 
 class Pattern_Feeder:
     def __init__(self, test_Only = True):        
         self.Placeholder_Generate();
 
         if not test_Only:
-            with open(os.path.join(pattern_Prameters.pattern_Files_Path, "Pattern_Metadata_Dict.pickle").replace("\\", "/"), "rb") as f:
+            with open(os.path.join(pattern_Parameters.pattern_Files_Path, "Pattern_Metadata_Dict.pickle").replace("\\", "/"), "rb") as f:
                 load_Dict = pickle.load(f);        
             self.file_Name_List = load_Dict['File_Name_List'];
             self.token_Length_List = load_Dict['Token_Length_List'];
@@ -26,12 +26,12 @@ class Pattern_Feeder:
             if sound_Parameters.frame_Length != load_Dict['Frame_Length']:
                 raise ValueError("The frame length of assigned parameter({}) and data({}) are different.\nPlease check the inconsistency.".format(sound_Parameters.frame_Length, load_Dict['Frame_Length']));
 
-            if pattern_Prameters.spectrogram_Dimension != load_Dict['Spectrogram_Dimension']:
-                raise ValueError("The spectram dimension of assigned parameter({}) and data({}) are different. Please check the inconsistency.".format(pattern_Prameters.spectrogram_Dimension, load_Dict['Spectrogram_Dimension']));            
-            if pattern_Prameters.mel_Spectrogram_Dimension != load_Dict['Mel_Spectrogram_Dimension']:
-                raise ValueError("The mel-spectram dimension of assigned parameter({}) and data({}) are different. Please check the inconsistency.".format(pattern_Prameters.mel_Spectrogram_Dimension, load_Dict['Mel_Spectrogram_Dimension']));
-            if pattern_Prameters.max_Spectrogram_Length < load_Dict['Max_Spectrogram_Length']:
-                raise ValueError("The max spectram length of assigned parameter({}) is small than the data({}). Please check the inconsistency.".format(pattern_Prameters.max_Spectrogram_Length, load_Dict['Max_Spectrogram_Length']));
+            if pattern_Parameters.spectrogram_Dimension != load_Dict['Spectrogram_Dimension']:
+                raise ValueError("The spectram dimension of assigned parameter({}) and data({}) are different. Please check the inconsistency.".format(pattern_Parameters.spectrogram_Dimension, load_Dict['Spectrogram_Dimension']));            
+            if pattern_Parameters.mel_Spectrogram_Dimension != load_Dict['Mel_Spectrogram_Dimension']:
+                raise ValueError("The mel-spectram dimension of assigned parameter({}) and data({}) are different. Please check the inconsistency.".format(pattern_Parameters.mel_Spectrogram_Dimension, load_Dict['Mel_Spectrogram_Dimension']));
+            if pattern_Parameters.max_Spectrogram_Length < load_Dict['Max_Spectrogram_Length']:
+                raise ValueError("The max spectram length of assigned parameter({}) is small than the data({}). Please check the inconsistency.".format(pattern_Parameters.max_Spectrogram_Length, load_Dict['Max_Spectrogram_Length']));
 
             self.pattern_Queue = deque();
 
@@ -47,8 +47,8 @@ class Pattern_Feeder:
             self.placeholder_Dict["Signal"] = tf.placeholder(tf.float32, shape=(None, None), name="signal_Placeholder");    #[batch_Size, token_Length];
             self.placeholder_Dict["Token"] = tf.placeholder(tf.int32, shape=(None, None), name="token_Placeholder");    #[batch_Size, token_Length];
             self.placeholder_Dict["Token_Length"] = tf.placeholder(tf.int32, shape=(None,), name="token_Length_Placeholder");    #[batch_Size];
-            self.placeholder_Dict["Spectrogram"] = tf.placeholder(tf.float32, shape=(None, None, pattern_Prameters.spectrogram_Dimension), name="spectrogram_Placeholder");    #[batch_Size, spectrogram_Length, spectogram_Dimension];
-            self.placeholder_Dict["Mel_Spectrogram"] = tf.placeholder(tf.float32, shape=(None, None, pattern_Prameters.mel_Spectrogram_Dimension), name="mel_Spectrogram_Placeholder");    #Shape: [batch_Size, spectrogram_Length, mel_Spectogram_Dimension];
+            self.placeholder_Dict["Spectrogram"] = tf.placeholder(tf.float32, shape=(None, None, pattern_Parameters.spectrogram_Dimension), name="spectrogram_Placeholder");    #[batch_Size, spectrogram_Length, spectogram_Dimension];
+            self.placeholder_Dict["Mel_Spectrogram"] = tf.placeholder(tf.float32, shape=(None, None, pattern_Parameters.mel_Spectrogram_Dimension), name="mel_Spectrogram_Placeholder");    #Shape: [batch_Size, spectrogram_Length, mel_Spectogram_Dimension];
             self.placeholder_Dict["Mel_Spectrogram_Length"] = tf.placeholder(tf.int32, shape=(None,), name="mel_Spectrogram_Length_Placeholder");    #[batch_Size];
 
     def Pattern_Generate(self, is_Random = False):
@@ -60,12 +60,12 @@ class Pattern_Feeder:
             if is_Random:
                 shuffle(pattern_Index_List);    #Randomized order
 
-            pattern_Index_Batch_List = [pattern_Index_List[x:x+pattern_Prameters.batch_Size] for x in range(0, len(pattern_Index_List), pattern_Prameters.batch_Size)]
+            pattern_Index_Batch_List = [pattern_Index_List[x:x+pattern_Parameters.batch_Size] for x in range(0, len(pattern_Index_List), pattern_Parameters.batch_Size)]
             shuffle(pattern_Index_Batch_List);
 
             current_Index = 0;
             while current_Index < len(pattern_Index_Batch_List):
-                if len(self.pattern_Queue) >= pattern_Prameters.max_Queue:
+                if len(self.pattern_Queue) >= pattern_Parameters.max_Queue:
                     time.sleep(0.1);
                     continue;
                 self.New_Pattern_Append(pattern_Index_Batch_List[current_Index]);
@@ -81,7 +81,7 @@ class Pattern_Feeder:
 
         for index in pattern_Index_List:
             file_Name = self.file_Name_List[index];
-            with open(os.path.join(pattern_Prameters.pattern_Files_Path, file_Name).replace("\\", "/"), "rb") as f:
+            with open(os.path.join(pattern_Parameters.pattern_Files_Path, file_Name).replace("\\", "/"), "rb") as f:
                 load_Dict = pickle.load(f);
             signal_Pattern_List.append(load_Dict["Signal"]);
             token_Pattern_List.append(load_Dict["Token_Pattern"]);
@@ -91,13 +91,13 @@ class Pattern_Feeder:
         signal_per_Frame = sound_Parameters.sample_Rate // int(1000 / sound_Parameters.frame_Shift);
         max_Signal_Pattern_Length = int(np.ceil(max([x.shape[0] for x in signal_Pattern_List]) / signal_per_Frame) * signal_per_Frame);   #To compare to the output
         max_Token_Pattern_Length = max([len(x) for x in token_Pattern_List]);
-        max_Spectrogram_Pattern_Length = int(np.ceil(max([x.shape[0] for x in spectrogram_Pattern_List]) / decoder_Prameters.output_Size_per_Step) * decoder_Prameters.output_Size_per_Step);   #To compare to the output
+        max_Spectrogram_Pattern_Length = int(np.ceil(max([x.shape[0] for x in spectrogram_Pattern_List]) / decoder_Parameters.output_Size_per_Step) * decoder_Parameters.output_Size_per_Step);   #To compare to the output
 
         signal_Pattern_Array = np.zeros((pattern_Count, max_Signal_Pattern_Length)).astype("float32");
         token_Pattern_Array = np.zeros((pattern_Count, max_Token_Pattern_Length)).astype("int32");
         token_Length_Array = np.zeros((pattern_Count)).astype("int32");
-        spectrogram_Pattern_Array = np.zeros((pattern_Count, max_Spectrogram_Pattern_Length, pattern_Prameters.spectrogram_Dimension)).astype("float32");
-        mel_Spectrogram_Pattern_Array = np.zeros((pattern_Count, max_Spectrogram_Pattern_Length, pattern_Prameters.mel_Spectrogram_Dimension)).astype("float32");
+        spectrogram_Pattern_Array = np.zeros((pattern_Count, max_Spectrogram_Pattern_Length, pattern_Parameters.spectrogram_Dimension)).astype("float32");
+        mel_Spectrogram_Pattern_Array = np.zeros((pattern_Count, max_Spectrogram_Pattern_Length, pattern_Parameters.mel_Spectrogram_Dimension)).astype("float32");
         mel_Spectrogram_Length_Array = np.zeros((pattern_Count)).astype("int32");
 
         for index, (signal, token_Pattern, spectrogram_Pattern, mel_Spectrogram_Pattern) in enumerate(zip(signal_Pattern_List, token_Pattern_List, spectrogram_Pattern_List, mel_Spectrogram_Pattern_List)):
@@ -145,9 +145,9 @@ class Pattern_Feeder:
             token_Pattern_Array[index, :len(token_Pattern)] = token_Pattern;
             token_Length_Array[index] = len(token_Pattern);
 
-        max_Iterations = int(np.ceil(pattern_Prameters.max_Spectrogram_Length / decoder_Prameters.output_Size_per_Step));
-        dummy_Spectrogram_Pattern_Array = np.zeros((batch_Size, max_Iterations, pattern_Prameters.spectrogram_Dimension)).astype("float32");
-        dummy_Mel_Spectrogram_Pattern_Array = np.zeros((batch_Size, max_Iterations, pattern_Prameters.mel_Spectrogram_Dimension)).astype("float32");
+        max_Iterations = int(np.ceil(pattern_Parameters.max_Spectrogram_Length / decoder_Parameters.output_Size_per_Step));
+        dummy_Spectrogram_Pattern_Array = np.zeros((batch_Size, max_Iterations, pattern_Parameters.spectrogram_Dimension)).astype("float32");
+        dummy_Mel_Spectrogram_Pattern_Array = np.zeros((batch_Size, max_Iterations, pattern_Parameters.mel_Spectrogram_Dimension)).astype("float32");
         dummy_Mel_Spectrogram_Length_Array = np.zeros((batch_Size)).astype("int32");
 
         feed_Dict = {

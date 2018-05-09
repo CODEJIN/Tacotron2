@@ -126,8 +126,8 @@ training_Loss_Parameters_Dict = {
     }
 
 sound_Parameters = tf.contrib.training.HParams(**sound_Parameters_Dict)
-pattern_Prameters = tf.contrib.training.HParams(**pattern_Parameters_Dict)
-encoder_Prameters = tf.contrib.training.HParams(**encoder_Parameters_Dict)
-attention_Prameters = tf.contrib.training.HParams(**attention_Parameters_Dict)
-decoder_Prameters = tf.contrib.training.HParams(**decoder_Parameters_Dict)
+pattern_Parameters = tf.contrib.training.HParams(**pattern_Parameters_Dict)
+encoder_Parameters = tf.contrib.training.HParams(**encoder_Parameters_Dict)
+attention_Parameters = tf.contrib.training.HParams(**attention_Parameters_Dict)
+decoder_Parameters = tf.contrib.training.HParams(**decoder_Parameters_Dict)
 training_Loss_Parameters = tf.contrib.training.HParams(**training_Loss_Parameters_Dict)
