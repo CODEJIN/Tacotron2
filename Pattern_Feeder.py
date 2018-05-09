@@ -21,7 +21,7 @@ class Pattern_Feeder:
             
             if sound_Parameters.sample_Rate != load_Dict['Sample_Rate']:
                 raise ValueError("The sample rate of assigned parameter({}) and data({}) are different.\nPlease check the inconsistency.".format(sound_Parameters.sample_Rate, load_Dict['Sample_Rate']));
-            if sound_Parameters.frame_Shfit != load_Dict['Frame_Shfit']:
+            if sound_Parameters.frame_Shfit != load_Dict['Frame_Shift']:
                 raise ValueError("The frame shift of assigned parameter({}) and data({}) are different.\nPlease check the inconsistency.".format(sound_Parameters.frame_Shfit, load_Dict['Frame_Shfit']));
             if sound_Parameters.frame_Length != load_Dict['Frame_Length']:
                 raise ValueError("The frame length of assigned parameter({}) and data({}) are different.\nPlease check the inconsistency.".format(sound_Parameters.frame_Length, load_Dict['Frame_Length']));
