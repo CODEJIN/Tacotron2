@@ -80,7 +80,7 @@ token_Index_Dict = {
 
 sound_Parameters_Dict = {
     "sample_Rate": 22050,    
-    "frame_Shfit": 12.5,  #ms
+    "frame_Shift": 12.5,  #ms
     "frame_Length": 50,  #ms
     }
 
