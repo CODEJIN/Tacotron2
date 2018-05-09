@@ -149,7 +149,7 @@ def Pattern_Generate(recognition_File_Path, audio_Path, export_Pattern_Path = No
     metadata_Dict["Token_Length_List"] = pattern_Token_Length_List;
     
     metadata_Dict["Sample_Rate"] = sound_Parameters.sample_Rate;
-    metadata_Dict["Frame_Shfit"] = sound_Parameters.frame_Shfit;
+    metadata_Dict["Frame_Shift"] = sound_Parameters.frame_Shfit;
     metadata_Dict["Frame_Length"] = sound_Parameters.frame_Length;
 
     metadata_Dict["Mel_Spectrogram_Dimension"] = pattern_Prameters.mel_Spectrogram_Dimension;
